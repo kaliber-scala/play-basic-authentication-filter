@@ -88,7 +88,7 @@ object BasicAuthenticationFilterSpec extends Specification {
     new FakeApplicationWithCredentials("test", "test") {
       val cookie1 = Cookie("play-basic-authentication-filter", "")
       requestWithCookie(cookie1) isEqualTo defaultUnAuthorizedResult
-      
+
       val cookie2 = Cookie("play-basic-authentication-filter", "test")
       requestWithCookie(cookie2) isEqualTo defaultUnAuthorizedResult
     }
@@ -96,6 +96,16 @@ object BasicAuthenticationFilterSpec extends Specification {
   "The filter should return the correct cookie" in
     new FakeApplicationWithTestUser {
       cookieFromResult(request()).value === "9298e9b9fec2749a9d1c9ffca186647f28daa9ba"
+    }
+
+  "The filter should allow other authorization headers when a cookie is available" in
+    new FakeApplicationWithTestUser {
+      val cookie = cookieFromResult(request())
+      val result = route(FakeRequest()
+        .withCookies(cookie)
+        .withHeaders(AUTHORIZATION -> "test")).get
+
+      result isStatus OK
     }
 
   private def configuration(
@@ -137,11 +147,11 @@ object BasicAuthenticationFilterSpec extends Specification {
   private class FakeApplicationWithCredentials(username: String, password: String) extends WithApplication(
     fakeApplication(configuration(username = Some(username), password = Some(password)))
   )
-  
-  private class FakeApplicationWithTestUser extends FakeApplicationWithCredentials("test-user", "test-password")  {
+
+  private class FakeApplicationWithTestUser extends FakeApplicationWithCredentials("test-user", "test-password") {
     def request() = requestWithAuthorization("Basic dGVzdC11c2VyOnRlc3QtcGFzc3dvcmQ=")
   }
-  
+
   private def fakeApplication(configuration: Map[String, Any] = Map.empty) =
     FakeApplication(
       withRoutes = defaultRoutes,

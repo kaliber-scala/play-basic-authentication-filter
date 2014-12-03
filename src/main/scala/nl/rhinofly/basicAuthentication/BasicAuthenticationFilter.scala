@@ -31,12 +31,14 @@ class BasicAuthenticationFilter(configurationFactory: => BasicAuthenticationFilt
     lazy val authorizedByHeader =
       requestHeader.headers.get(AUTHORIZATION)
         .map(_ == expectedHeaderValue)
+        .getOrElse(false)
 
     lazy val authorizedByCookie =
       requestHeader.cookies.get(COOKIE_NAME)
         .map(_.value == cookieValue)
+        .getOrElse(false)
 
-    authorizedByHeader orElse authorizedByCookie getOrElse false
+    authorizedByHeader || authorizedByCookie
   }
 
   private def addCookie(result: Future[Result]) =
