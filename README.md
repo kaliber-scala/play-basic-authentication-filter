@@ -1,4 +1,4 @@
-# Basic Athentication Filter
+# Basic Authentication Filter
 
 A simple Play Framework filter that provides basic authentication 
 
