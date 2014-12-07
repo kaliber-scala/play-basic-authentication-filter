@@ -51,8 +51,9 @@ identifier for both username and password.
 basicAuthentication.username=username
 basicAuthentication.password=password
 ```
+Running the application in a browser should now display a basic authentication popup.
 
-## Releasing
+## Releasing the play-basic-authentication-filter plugin
 
 Make sure you have the correct credentials present (in `~/.sbt/0.13/credentials.sbt`)
 
