@@ -7,7 +7,7 @@ A simple Play Framework filter that provides basic authentication
 ```scala
 resolvers += resolvers += "Rhinofly Internal Repository" at "http://maven-repository.rhinofly.net:8081/artifactory/libs-release-local"
 
-libraryDependencies += "nl.rhinofly" %% "play-basic-authentication-filter" % "0.3"
+libraryDependencies += "nl.rhinofly" %% "play-basic-authentication-filter" % "0.4"
 ```
 
 *Global.scala*
@@ -52,6 +52,15 @@ basicAuthentication.username=username
 basicAuthentication.password=password
 ```
 Running the application in a browser should now display a basic authentication popup.
+
+**excluded**
+
+Allows you to add paths that the authentication filter ignores.
+
+```scala
+// default: empty list
+basicAuthentication.excluded = ["/path1", "/path2"]
+```
 
 ## Releasing the play-basic-authentication-filter plugin
 

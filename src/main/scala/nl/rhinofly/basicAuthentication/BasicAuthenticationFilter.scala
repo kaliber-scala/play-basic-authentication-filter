@@ -20,8 +20,12 @@ import play.api.mvc.Results.Unauthorized
 class BasicAuthenticationFilter(configurationFactory: => BasicAuthenticationFilterConfiguration) extends Filter {
 
   def apply(next: RequestHeader => Future[Result])(requestHeader: RequestHeader): Future[Result] =
-    if (configuration.enabled) checkAuthentication(requestHeader, next)
+    if (configuration.enabled && isNotExcluded(requestHeader))
+      checkAuthentication(requestHeader, next)
     else next(requestHeader)
+
+  private def isNotExcluded(requestHeader: RequestHeader): Boolean =
+    !configuration.excluded.contains(requestHeader.path)
 
   private def checkAuthentication(requestHeader: RequestHeader, next: RequestHeader => Future[Result]): Future[Result] =
     if (isAuthorized(requestHeader)) addCookie(next(requestHeader))
@@ -79,7 +83,8 @@ case class BasicAuthenticationFilterConfiguration(
   realm: String,
   enabled: Boolean,
   username: String,
-  password: String)
+  password: String,
+  excluded: Set[String])
 
 object BasicAuthenticationFilterConfiguration {
 
@@ -111,11 +116,16 @@ object BasicAuthenticationFilterConfiguration {
       else credentialsMissingRealm(realm)
     }
 
+    val excluded = configuration.getStringSeq(root + "excluded")
+      .getOrElse(Seq.empty)
+      .toSet
+
     BasicAuthenticationFilterConfiguration(
       realm(credentials.isDefined),
       enabled,
       username,
-      password
+      password,
+      excluded
     )
   }
 }

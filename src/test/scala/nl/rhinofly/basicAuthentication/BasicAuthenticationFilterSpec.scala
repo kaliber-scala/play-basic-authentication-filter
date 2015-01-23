@@ -108,15 +108,32 @@ object BasicAuthenticationFilterSpec extends Specification {
       result isStatus OK
     }
 
+  "The filter should allow specific requests when their paths are excluded" in 
+  new WithApplication(
+    fakeApplication(configuration(excluded = Some(Seq("/test"))))
+  ) {
+    val result1 = route(FakeRequest("GET", "/test")).get
+    val result2 = route(FakeRequest("GET", "/test?some=none")).get
+    val result3 = route(FakeRequest("POST", "/test")).get
+    val result4 = route(FakeRequest("Get", "/test2")).get
+    
+    result1 isStatus OK
+    result2 isStatus OK
+    result3 isStatus OK
+    result4 isEqualTo defaultUnAuthorizedResult
+  }
+  
   private def configuration(
     realm: Option[String] = None,
     enabled: Option[Boolean] = None,
     username: Option[String] = Some("unknown username"),
-    password: Option[String] = Some("unknown password")) =
+    password: Option[String] = Some("unknown password"),
+    excluded: Option[Seq[String]] = Some(Seq.empty)) =
     (realm.map("basicAuthentication.realm" -> _).toSeq ++
       enabled.map("basicAuthentication.enabled" -> _).toSeq ++
       username.map("basicAuthentication.username" -> _).toSeq ++
-      password.map("basicAuthentication.password" -> _).toSeq :+
+      password.map("basicAuthentication.password" -> _).toSeq ++
+      excluded.map("basicAuthentication.excluded" -> _).toSeq :+
       ("application.secret" -> "test-secret")
     ).toMap
 
