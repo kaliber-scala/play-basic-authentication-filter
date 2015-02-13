@@ -5,7 +5,7 @@ A simple Play Framework filter that provides basic authentication
 ## Installing
 
 ```scala
-resolvers += resolvers += "Rhinofly Internal Repository" at "http://maven-repository.rhinofly.net:8081/artifactory/libs-release-local"
+resolvers += "Rhinofly Internal Repository" at "http://maven-repository.rhinofly.net:8081/artifactory/libs-release-local"
 
 libraryDependencies += "nl.rhinofly" %% "play-basic-authentication-filter" % "0.4"
 ```
