@@ -33,14 +33,10 @@ class BasicAuthenticationFilter(configurationFactory: => BasicAuthenticationFilt
 
   private def isAuthorized(requestHeader: RequestHeader) = {
     lazy val authorizedByHeader =
-      requestHeader.headers.get(AUTHORIZATION)
-        .map(_ == expectedHeaderValue)
-        .getOrElse(false)
+      requestHeader.headers.get(AUTHORIZATION).contains(expectedHeaderValue)
 
     lazy val authorizedByCookie =
-      requestHeader.cookies.get(COOKIE_NAME)
-        .map(_.value == cookieValue)
-        .getOrElse(false)
+      requestHeader.cookies.get(COOKIE_NAME).exists(_.value == cookieValue)
 
     authorizedByHeader || authorizedByCookie
   }
