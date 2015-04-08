@@ -75,6 +75,12 @@ object BasicAuthenticationFilterSpec extends Specification {
       requestWithAuthorization("Basic dXNlcjE6dXNlcjFQYXNz") isStatus OK
     }
 
+  "The filter should allow multiple passwords to be used" in
+    new FakeApplicationWithCredentials("user1", Seq("user1Pass", "user2Pass")) {
+      requestWithAuthorization("Basic dXNlcjE6dXNlcjFQYXNz") isStatus OK
+      requestWithAuthorization("Basic dXNlcjE6dXNlcjJQYXNz") isStatus OK
+    }
+
   "The filter should authenticate based on a cookie the second time" in
     new FakeApplicationWithTestUser {
       val result = request()
@@ -95,7 +101,7 @@ object BasicAuthenticationFilterSpec extends Specification {
 
   "The filter should return the correct cookie" in
     new FakeApplicationWithTestUser {
-      cookieFromResult(request()).value === "9298e9b9fec2749a9d1c9ffca186647f28daa9ba"
+      cookieFromResult(request()).value === "624189caa1ac60e44842403820962958dfb720b9"
     }
 
   "The filter should allow other authorization headers when a cookie is available" in
@@ -108,7 +114,7 @@ object BasicAuthenticationFilterSpec extends Specification {
       result isStatus OK
     }
 
-  "The filter should allow specific requests when their paths are excluded" in 
+  "The filter should allow specific requests when their paths are excluded" in
   new WithApplication(
     fakeApplication(configuration(excluded = Some(Seq("/test"))))
   ) {
@@ -116,18 +122,18 @@ object BasicAuthenticationFilterSpec extends Specification {
     val result2 = route(FakeRequest("GET", "/test?some=none")).get
     val result3 = route(FakeRequest("POST", "/test")).get
     val result4 = route(FakeRequest("Get", "/test2")).get
-    
+
     result1 isStatus OK
     result2 isStatus OK
     result3 isStatus OK
     result4 isEqualTo defaultUnAuthorizedResult
   }
-  
+
   private def configuration(
     realm: Option[String] = None,
     enabled: Option[Boolean] = None,
     username: Option[String] = Some("unknown username"),
-    password: Option[String] = Some("unknown password"),
+    password: Option[AnyRef] = Some("unknown password"),
     excluded: Option[Seq[String]] = Some(Seq.empty)) =
     (realm.map("basicAuthentication.realm" -> _).toSeq ++
       enabled.map("basicAuthentication.enabled" -> _).toSeq ++
@@ -161,7 +167,7 @@ object BasicAuthenticationFilterSpec extends Specification {
     fakeApplication(configuration())
   )
 
-  private class FakeApplicationWithCredentials(username: String, password: String) extends WithApplication(
+  private class FakeApplicationWithCredentials(username: String, password: AnyRef) extends WithApplication(
     fakeApplication(configuration(username = Some(username), password = Some(password)))
   )
 

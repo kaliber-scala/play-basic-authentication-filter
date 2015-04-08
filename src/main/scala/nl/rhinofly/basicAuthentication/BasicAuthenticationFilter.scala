@@ -1,8 +1,8 @@
 package nl.rhinofly.basicAuthentication
 
-import java.util.UUID
+import com.typesafe.config.ConfigValueType
 
-import scala.concurrent.Future
+import java.util.UUID
 
 import org.apache.commons.codec.binary.Base64
 
@@ -16,6 +16,9 @@ import play.api.mvc.Filter
 import play.api.mvc.RequestHeader
 import play.api.mvc.Result
 import play.api.mvc.Results.Unauthorized
+
+import scala.collection.JavaConverters._
+import scala.concurrent.Future
 
 class BasicAuthenticationFilter(configurationFactory: => BasicAuthenticationFilterConfiguration) extends Filter {
 
@@ -33,7 +36,7 @@ class BasicAuthenticationFilter(configurationFactory: => BasicAuthenticationFilt
 
   private def isAuthorized(requestHeader: RequestHeader) = {
     lazy val authorizedByHeader =
-      requestHeader.headers.get(AUTHORIZATION).contains(expectedHeaderValue)
+      requestHeader.headers.get(AUTHORIZATION).exists(expectedHeaderValues)
 
     lazy val authorizedByCookie =
       requestHeader.cookies.get(COOKIE_NAME).exists(_.value == cookieValue)
@@ -54,13 +57,14 @@ class BasicAuthenticationFilter(configurationFactory: => BasicAuthenticationFilt
   private lazy val cookie = Cookie(COOKIE_NAME, cookieValue)
 
   private lazy val cookieValue =
-    Crypto.sign(configuration.username + configuration.password)
+    Crypto.sign(configuration.username + configuration.passwords)
 
-  private lazy val expectedHeaderValue = {
-    val combined = configuration.username + ":" + configuration.password
-    val credentials = Base64.encodeBase64String(combined.getBytes)
-    basic(credentials)
-  }
+  private lazy val expectedHeaderValues =
+    configuration.passwords.map { password =>
+      val combined = configuration.username + ":" + password
+      val credentials = Base64.encodeBase64String(combined.getBytes)
+      basic(credentials)
+    }
 
   private def realm = basic(s"""realm=\"${configuration.realm}"""")
 
@@ -79,7 +83,7 @@ case class BasicAuthenticationFilterConfiguration(
   realm: String,
   enabled: Boolean,
   username: String,
-  password: String,
+  passwords: Set[String],
   excluded: Set[String])
 
 object BasicAuthenticationFilterConfiguration {
@@ -93,17 +97,25 @@ object BasicAuthenticationFilterConfiguration {
     val root = "basicAuthentication."
     def boolean(key: String) = configuration.getBoolean(root + key)
     def string(key: String) = configuration.getString(root + key)
+    def seq(key: String) =
+      Option(configuration.underlying getValue (root + key)).map { value =>
+        value.valueType match {
+          case ConfigValueType.LIST => value.unwrapped.asInstanceOf[java.util.List[String]].asScala
+          case ConfigValueType.STRING => Seq(value.unwrapped.asInstanceOf[String])
+          case _ => sys.error(s"Unexpected value at `${root + key}`, expected STRING or LIST")
+        }
+      }
 
     val enabled = boolean("enabled").getOrElse(true)
 
-    val credentials: Option[(String, String)] = for {
+    val credentials: Option[(String, Set[String])] = for {
       username <- string("username")
-      password <- string("password")
-    } yield (username, password)
+      passwords <- seq("password")
+    } yield (username, passwords.toSet)
 
-    val (username, password) = {
+    val (username, passwords) = {
       def uuid = UUID.randomUUID.toString
-      credentials.getOrElse((uuid, uuid))
+      credentials.getOrElse((uuid, Set(uuid)))
     }
 
     def realm(hasCredentials: Boolean) = {
@@ -120,7 +132,7 @@ object BasicAuthenticationFilterConfiguration {
       realm(credentials.isDefined),
       enabled,
       username,
-      password,
+      passwords,
       excluded
     )
   }

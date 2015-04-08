@@ -1,6 +1,6 @@
 # Basic Authentication Filter
 
-A simple Play Framework filter that provides basic authentication 
+A simple Play Framework filter that provides basic authentication
 
 ## Installing
 
@@ -32,7 +32,7 @@ basicAuthentication.enabled=false
 
 **realm**
 
-This is the realm to which the security applies. Most browsers display it 
+This is the realm to which the security applies. Most browsers display it
 in the dialog.
 
 ```scala
@@ -50,6 +50,9 @@ identifier for both username and password.
 // default: random uuid
 basicAuthentication.username=username
 basicAuthentication.password=password
+
+// multiple passwords (used in combination with the same username)
+basicAuthentication.password=[password1,password2]
 ```
 Running the application in a browser should now display a basic authentication popup.
 
@@ -67,7 +70,7 @@ basicAuthentication.excluded = ["/path1", "/path2"]
 Make sure you have the correct credentials present (in `~/.sbt/0.13/credentials.sbt`)
 
 ```scala
-credentials += Credentials(Path.userHome / ".ivy2" / ".credentials") 
+credentials += Credentials(Path.userHome / ".ivy2" / ".credentials")
 ```
 
 Then in the `sbt` console type `release`
