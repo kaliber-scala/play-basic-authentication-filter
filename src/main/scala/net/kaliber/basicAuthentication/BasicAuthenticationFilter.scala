@@ -1,4 +1,4 @@
-package nl.rhinofly.basicAuthentication
+package net.kaliber.basicAuthentication
 
 import com.typesafe.config.ConfigValueType
 
@@ -76,6 +76,10 @@ object BasicAuthenticationFilter {
     BasicAuthenticationFilterConfiguration.parse(
       play.api.Play.current.configuration
     )
+  )
+
+  def apply(configuration: => Configuration) = new BasicAuthenticationFilter(
+    BasicAuthenticationFilterConfiguration parse configuration
   )
 }
 

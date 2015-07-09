@@ -1,20 +1,34 @@
 # Basic Authentication Filter
 
-A simple Play Framework filter that provides basic authentication
+A simple Play Framework 2.4 filter that provides basic authentication
 
 ## Installing
 
 ```scala
-resolvers += "Rhinofly Internal Repository" at "http://maven-repository.rhinofly.net:8081/artifactory/libs-release-local"
+resolvers += "Kaliber Repository" at "https://jars.kaliber.io/artifactory/libs-release-local"
 
-libraryDependencies += "nl.rhinofly" %% "play-basic-authentication-filter" % "0.6"
+libraryDependencies += "net.kaliber" %% "play-basic-authentication-filter" % "0.7"
 ```
 
 *Global.scala*
 ```
-import nl.rhinofly.basicAuthentication.BasicAuthenticationFilter
+import net.kaliber.basicAuthentication.BasicAuthenticationFilter
 
 object Global extends WithFilters(BasicAuthenticationFilter()) with GlobalSettings
+```
+
+*ApplicationLoader/ApplicationComponents*
+```
+import net.kaliber.basicAuthentication.BasicAuthenticationFilter
+import play.api.ApplicationLoader.Context
+import play.api.BuiltInComponentsFromContext
+
+class ApplicationComponents(context: Context) extends BuiltInComponentsFromContext(context) {
+
+  override lazy val httpFilters = Seq(BasicAuthenticationFilter(context.initialConfiguration))
+
+  lazy val router = ???
+}
 ```
 
 ## Configuration

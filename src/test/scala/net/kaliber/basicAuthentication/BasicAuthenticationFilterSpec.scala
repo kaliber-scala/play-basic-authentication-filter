@@ -1,11 +1,8 @@
-package nl.rhinofly.basicAuthentication
+package net.kaliber.basicAuthentication
 
 import scala.concurrent.Future
-
 import org.specs2.mutable.Specification
-
 import play.api.GlobalSettings
-
 import play.api.mvc.Action
 import play.api.mvc.Cookie
 import play.api.mvc.Handler
@@ -13,12 +10,14 @@ import play.api.mvc.Result
 import play.api.mvc.Results.Ok
 import play.api.mvc.Results.Unauthorized
 import play.api.mvc.WithFilters
-
 import play.api.test.FakeApplication
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import play.api.test.WithApplication
 import play.api.test.Helpers
+import scala.concurrent.Await
+import scala.concurrent.duration._
+import play.api.Configuration
 
 object BasicAuthenticationFilterSpec extends Specification {
 
@@ -26,6 +25,32 @@ object BasicAuthenticationFilterSpec extends Specification {
      |the Global object""".stripMargin in {
 
     object Global extends WithFilters(BasicAuthenticationFilter()) with GlobalSettings
+    success
+  }
+
+  """|It can also be created from configuration
+     |""".stripMargin in {
+    lazy val configuration: Configuration = ???
+    new BasicAuthenticationFilter(BasicAuthenticationFilterConfiguration parse configuration)
+
+    BasicAuthenticationFilter(configuration)
+
+    success
+   }
+
+
+  """|It is usuable in an application loader setting
+     |""".stripMargin in {
+    import play.api.ApplicationLoader.Context
+    import play.api.BuiltInComponentsFromContext
+
+    class ApplicationComponents(context: Context) extends BuiltInComponentsFromContext(context) {
+
+      override lazy val httpFilters = Seq(BasicAuthenticationFilter(context.initialConfiguration))
+
+      lazy val router = ???
+    }
+
     success
   }
 
@@ -148,7 +173,7 @@ object BasicAuthenticationFilterSpec extends Specification {
       username.map("basicAuthentication.username" -> _).toSeq ++
       password.map("basicAuthentication.password" -> _).toSeq ++
       excluded.map("basicAuthentication.excluded" -> _).toSeq :+
-      ("application.secret" -> "test-secret")
+      ("play.crypto.secret" -> "test-secret")
     ).toMap
 
   private def requestResult = route(FakeRequest()).get
@@ -195,7 +220,7 @@ object BasicAuthenticationFilterSpec extends Specification {
   }
 
   private implicit class TestEnhancement(a: Future[Result]) {
-    def isEqualTo[B](b: B) = a must beEqualTo(b).await
+    def isEqualTo[B](b: B) = Await.result(a, 1.second) must beEqualTo(b)
     def isStatus(b: Int) = Helpers.status(a) === b
   }
 
