@@ -28,7 +28,7 @@ class BasicAuthenticationFilter(configurationFactory: => BasicAuthenticationFilt
     else next(requestHeader)
 
   private def isNotExcluded(requestHeader: RequestHeader): Boolean =
-    !configuration.excluded.contains(requestHeader.path)
+    !configuration.excluded.exists( requestHeader.path matches _ )
 
   private def checkAuthentication(requestHeader: RequestHeader, next: RequestHeader => Future[Result]): Future[Result] =
     if (isAuthorized(requestHeader)) addCookie(next(requestHeader))

@@ -116,17 +116,25 @@ object BasicAuthenticationFilterSpec extends Specification {
 
   "The filter should allow specific requests when their paths are excluded" in
   new WithApplication(
-    fakeApplication(configuration(excluded = Some(Seq("/test"))))
+    fakeApplication(configuration(excluded = Some(Seq("/test", "/test3/[a-z/]*"))))
   ) {
     val result1 = route(FakeRequest("GET", "/test")).get
     val result2 = route(FakeRequest("GET", "/test?some=none")).get
     val result3 = route(FakeRequest("POST", "/test")).get
-    val result4 = route(FakeRequest("Get", "/test2")).get
+    val result4 = route(FakeRequest("GET", "/test2")).get
+    val result5 = route(FakeRequest("POST", "/test3/")).get
+    val result6 = route(FakeRequest("GET", "/test3/some")).get
+    val result7 = route(FakeRequest("POST", "/test3/some/none")).get
+    val result8 = route(FakeRequest("POST", "/test3/123/none")).get
 
     result1 isStatus OK
     result2 isStatus OK
     result3 isStatus OK
     result4 isEqualTo defaultUnAuthorizedResult
+    result5 isStatus OK
+    result6 isStatus OK
+    result7 isStatus OK
+    result8 isEqualTo defaultUnAuthorizedResult
   }
 
   private def configuration(
