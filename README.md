@@ -62,7 +62,7 @@ Allows you to add paths that the authentication filter ignores.
 
 ```scala
 // default: empty list
-basicAuthentication.excluded = ["/path1", "/path2"]
+basicAuthentication.excluded = ["/path1", "/path2", "/some_regexp(.*)?"]
 ```
 
 ## Releasing the play-basic-authentication-filter plugin
